@@ -45,6 +45,11 @@ const generateFilename = () => {
     return Array(parseInt(process.env.FILENAME_LENGTH)).fill('').map(() => characters[Math.floor(Math.random() * characters.length)]).join('');
 }
 
+app.get('/:filename', (req, res) => {
+    filePath = __dirname + process.env.SAVE_DIRECTORY + req.params.filename;
+    res.sendFile(filePath);
+})
+
 app.post('/up', jsonParser, (req, res) => {
     logger.log({ level: "info", message: 'request received' })
 
@@ -65,7 +70,7 @@ app.post('/up', jsonParser, (req, res) => {
         let fileExt = sharex.name.split('.').pop();
         filename = generateFilename() + '.' + fileExt;
 
-        uploadPath = process.env.SAVE_DIRECTORY + filename;
+        uploadPath = __dirname + process.env.SAVE_DIRECTORY + filename;
 
         sharex.mv(uploadPath, (err) => {
             if(err) {
