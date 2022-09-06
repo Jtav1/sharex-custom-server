@@ -1,11 +1,9 @@
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 const express = require('express');
-const _ = require('lodash');
 const rateLimit = require('express-rate-limit');
 const fileUpload = require('express-fileupload');
 const bodyParser = require('body-parser');
-
 
 require('dotenv').config();
 
@@ -52,11 +50,10 @@ app.get('/:filename', (req, res) => {
     res.sendFile(filePath);
 })
 
-app.post('/up', jsonParser, (req, res, next) => {
+app.post('/up', jsonParser, (req, res) => {
     logger.log({ level: "info", message: 'request received' })
 
     let sentSecret = req.body.secret;
-    let error = ""
 
     if(sentSecret === process.env.SECRET_KEY) {
 
@@ -64,26 +61,29 @@ app.post('/up', jsonParser, (req, res, next) => {
 
         if(Object.hasOwn(req.files, 'sharex')){
             sharex = req.files.sharex
+
+            let fileExt = sharex.name.split('.').pop();
+            filename = generateFilename() + '.' + fileExt;
+
+            uploadPath = __dirname + process.env.SAVE_DIRECTORY + filename;
+
+            // If the images directory doesnt exist this will blow up lol
+            sharex.mv(uploadPath, (err) => {
+                if(err) {
+                    logger.log({ level: "error", message: 'error saving file' })
+                    res.send('Error saving file');
+                }
+            })
+
+            logger.log({ level: "info", message: 'All good, sending correct response' })
+            res.send(process.env.SITE_URL + filename);
+            
         } else {
             logger.log({ level: "error", message: 'no file attached' })
             res.send('No file attached');
         }
         
-        let fileExt = sharex.name.split('.').pop();
-        filename = generateFilename() + '.' + fileExt;
-
-        uploadPath = __dirname + process.env.SAVE_DIRECTORY + filename;
-
-        // If the images directory doesnt exist this will blow up lol
-        sharex.mv(uploadPath, (err) => {
-            if(err) {
-                logger.log({ level: "error", message: 'error saving file' })
-                res.send('Error saving file');
-            }
-        })
-
-        logger.log({ level: "info", message: 'All good, sending correct response' })
-        res.send(process.env.SITE_URL + filename);
+        
     } else {
         logger.log({ level: "error", message: 'Incorrect secret key' })
         res.send('Incorrect secret key');
