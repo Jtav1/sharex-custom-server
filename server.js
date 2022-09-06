@@ -6,9 +6,11 @@ const rateLimit = require('express-rate-limit');
 const fileUpload = require('express-fileupload');
 const bodyParser = require('body-parser');
 
+
 require('dotenv').config();
 
 const app = express();
+app.use('/favicon.ico', express.static('images/favicon.ico'));
 
 app.use(fileUpload({
     limits: { fileSize: 1024 * 1024 * 1024 }
@@ -50,10 +52,11 @@ app.get('/:filename', (req, res) => {
     res.sendFile(filePath);
 })
 
-app.post('/up', jsonParser, (req, res) => {
+app.post('/up', jsonParser, (req, res, next) => {
     logger.log({ level: "info", message: 'request received' })
 
     let sentSecret = req.body.secret;
+    let error = ""
 
     if(sentSecret === process.env.SECRET_KEY) {
 
@@ -65,20 +68,19 @@ app.post('/up', jsonParser, (req, res) => {
             logger.log({ level: "error", message: 'no file attached' })
             res.send('No file attached');
         }
-
         
         let fileExt = sharex.name.split('.').pop();
         filename = generateFilename() + '.' + fileExt;
 
         uploadPath = __dirname + process.env.SAVE_DIRECTORY + filename;
 
+        // If the images directory doesnt exist this will blow up lol
         sharex.mv(uploadPath, (err) => {
             if(err) {
                 logger.log({ level: "error", message: 'error saving file' })
                 res.send('Error saving file');
             }
         })
-
 
         logger.log({ level: "info", message: 'All good, sending correct response' })
         res.send(process.env.SITE_URL + filename);
