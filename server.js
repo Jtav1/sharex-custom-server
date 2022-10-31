@@ -1,7 +1,7 @@
 const { createLogger, format, transports } = require('winston');
 const { combine, timestamp, label, printf } = format;
 const express = require('express');
-const rateLimit = require('express-rate-limit');
+// const rateLimit = require('express-rate-limit');
 const fileUpload = require('express-fileupload');
 const bodyParser = require('body-parser');
 
@@ -18,12 +18,12 @@ const jsonParser = bodyParser.json();
 
 const port = 3000;
 
-const limiter = rateLimit({
-    windowMs: 1 * 60 * 1000, //in 1 minute
-    max: 10, // limit each IP to 500 requests per windowMs
-})
+// const limiter = rateLimit({
+//     windowMs: 1 * 60 * 1000, //in 1 minute
+//     max: 10, // limit each IP to 500 requests per windowMs
+// })
 
-app.use(limiter);
+// app.use(limiter);
 
 // Log format + logger setup
 const myFormat = printf(({ level, message, label, timestamp }) => {
